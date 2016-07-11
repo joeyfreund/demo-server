@@ -1,15 +1,21 @@
 var express = require('express');
-var router = express.Router();
+var paginate = require('express-paginate');
 var db = require('../lib/db.js');
+
+var router = express.Router();
+// By default, return at most 25 products per page (max' limit is 100)
+router.use(paginate.middleware(25, 100));
 
 
 /* GET all products */
 router.get('/', function(req, res, next) {
-  // FIXME: We should probably apply a LIMIT
-  db.query('SELECT * FROM products', function(err, rows, fields) {
-    if (err) next(err);
-    res.json(rows);
-  });
+  var offset = (req.query.page - 1) * req.query.limit;
+  db.query('SELECT * FROM products LIMIT ?,?', [offset, req.query.limit],
+    function(err, rows, fields) {
+      if (err) next(err);
+      res.json(rows);
+    }
+  );
 });
 
 
